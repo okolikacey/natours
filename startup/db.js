@@ -1,0 +1,12 @@
+const mongoose = require('mongoose');
+// const winston = require('winston');
+const logger = require('./logging');
+
+const dbInstance = process.env.DATABASE.replace(
+  '<PASSWORD>',
+  process.env.DBPASSWORD
+);
+
+module.exports = function () {
+  mongoose.connect(dbInstance).then(() => logger.info(`Connected to database`));
+};
