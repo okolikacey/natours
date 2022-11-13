@@ -1,9 +1,9 @@
 const express = require('express');
-const { validateTour, Tour } = require('../models/tour');
-const validate = require('../middleware/validate');
+const { Tour } = require('../models/tour');
 const validateObjectId = require('../middleware/validateObjectId');
 const aliasTopTours = require('../middleware/aliasTopTours');
 const APIFeatures = require('../utils/apiFeatures');
+const AppError = require('../utils/appError');
 
 const router = express.Router();
 
@@ -84,7 +84,6 @@ router.get(['/', '/top-5-cheap'], aliasTopTours, async (req, res) => {
   //execute query
   const features = new APIFeatures(Tour.find(), req.query).filter().sort().limitFields().paginate();
   const tours = await features.query;
-
   res.json({
     status: 'success',
     results: tours.length,
@@ -92,16 +91,16 @@ router.get(['/', '/top-5-cheap'], aliasTopTours, async (req, res) => {
   });
 });
 
-router.get('/:id', validateObjectId, async (req, res) => {
+router.get('/:id', validateObjectId, async (req, res, next) => {
   const tour = await Tour.findById(req.params.id);
-  if (!tour) return res.status(404).send(`Tour with id ${req.params.id} not found`);
+  if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
   res.json({
     status: 'success',
     data: { tour },
   });
 });
 
-router.post('/', [validate(validateTour)], async (req, res) => {
+router.post('/', async (req, res) => {
   const newTour = await Tour.create(req.body);
 
   res.json({
@@ -110,19 +109,23 @@ router.post('/', [validate(validateTour)], async (req, res) => {
   });
 });
 
-router.patch('/:id', validateObjectId, async (req, res) => {
+router.patch('/:id', validateObjectId, async (req, res, next) => {
   const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
+  if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
+
   res.send({
     status: 'success',
     data: { tour },
   });
 });
 
-router.delete('/:id', validateObjectId, async (req, res) => {
-  await Tour.findByIdAndDelete(req.params.id);
+router.delete('/:id', validateObjectId, async (req, res, next) => {
+  const tour = await Tour.findByIdAndDelete(req.params.id);
+  if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
+
   res.status(204).send({
     status: 'success',
     data: null,

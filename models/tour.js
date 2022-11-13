@@ -43,7 +43,17 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       required: [true, 'A tour must have a price'],
     },
-    priceDiscount: Number,
+    priceDiscount: {
+      type: Number,
+      //custom validator
+      validate: {
+        validator: function (val) {
+          //This only points to current doc on NEW document creation
+          return val < this.price;
+        },
+        message: 'Discount price ({VALUE}) should be below reqular pice',
+      },
+    },
     summary: {
       type: String,
       required: [true, 'A tour must have a summary'],
@@ -104,28 +114,4 @@ tourSchema.pre('aggregate', function (next) {
 });
 
 const Tour = mongoose.model('Tour', tourSchema);
-
-function validateTour(tour) {
-  const schema = Joi.object({
-    name: Joi.string().min(10).max(40).required(),
-    duration: Joi.number().required(),
-    maxGroupSize: Joi.number().required(),
-    difficulty: Joi.string().required(),
-    ratingsAverage: Joi.number().min(1).max(5),
-    ratingsQuantity: Joi.number(),
-    price: Joi.number().required(),
-    priceDiscount: Joi.number(),
-    summary: Joi.string().required(),
-    description: Joi.string(),
-    imageCover: Joi.string().required(),
-    images: Joi.array().items(Joi.string()),
-    createdAt: Joi.date(),
-    startDates: Joi.array().items(Joi.date()),
-    secretTour: Joi.boolean(),
-  });
-
-  return schema.validate(tour);
-}
-
-exports.validateTour = validateTour;
 exports.Tour = Tour;

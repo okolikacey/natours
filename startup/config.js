@@ -1,8 +1,7 @@
-const jwtPrivateKey = process.env.JWTPRIVATEKEY
+const jwtPrivateKey = process.env.JWTPRIVATEKEY;
 
-
-module.exports = function(){
-    if(!jwtPrivateKey){
-        throw new Error('FATAL ERROR OCCURED: jwtPrivateKey is not defined');
-    }
-}
+module.exports = function () {
+  if (!jwtPrivateKey) {
+    throw new Error('FATAL ERROR OCCURED: jwtPrivateKey is not defined');
+  }
+};

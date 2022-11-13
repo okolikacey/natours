@@ -7,6 +7,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "start": "nodemon",
+    "start:prod": "NODE_ENV=production nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
