@@ -14,7 +14,6 @@ const handleValidationErrorDB = (err) => {
 };
 
 const sendErrorDev = (err, res) => {
-  logger.error(err);
   logger.error(err.stack);
 
   res.status(err.statusCode).json({
@@ -34,7 +33,6 @@ const sendErrorProd = (err, res) => {
     });
     //Programming or other unknown error: don't leak error details
   } else {
-    // logger.error(err);
     res.status(500).json({
       status: 'error',
       message: 'Something went very wrong!',
@@ -51,7 +49,8 @@ module.exports = function (err, req, res, next) {
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
-    if (error._message.includes('validation failed')) error = handleValidationErrorDB(error);
+    if (error._message && error._message.includes('validation failed'))
+      error = handleValidationErrorDB(error);
     sendErrorProd(error, res);
   }
 };

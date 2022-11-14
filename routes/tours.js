@@ -81,7 +81,7 @@ router.get('/monthly-plan/:year', async (req, res) => {
 });
 
 router.get(['/', '/top-5-cheap'], aliasTopTours, async (req, res) => {
-  //execute query
+  //execute querys
   const features = new APIFeatures(Tour.find(), req.query).filter().sort().limitFields().paginate();
   const tours = await features.query;
   res.json({

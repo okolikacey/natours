@@ -23,6 +23,7 @@
     "mongoose": "^6.7.0",
     "morgan": "^1.10.0",
     "slugify": "^1.6.5",
+    "validator": "^13.7.0",
     "winston": "^3.8.2",
     "winston-mongodb": "^5.1.0"
   },

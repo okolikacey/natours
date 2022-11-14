@@ -1,12 +1,21 @@
-const { createLogger, transports } = require('winston');
+const { createLogger, transports, format } = require('winston');
 // require('winston-mongodb'); //for error logging to mongodb
 require('express-async-errors'); //capture errors on endpoint calls
 
 // const dbInstance = process.env.DATABASE;
 
+const myformat = format.combine(
+  format.colorize(),
+  format.timestamp(),
+  format.align(),
+  format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`)
+);
+
 const logger = createLogger({
   transports: [
-    new transports.Console(),
+    new transports.Console({
+      format: myformat,
+    }),
     new transports.File({ filename: 'logfile.log', level: 'error' }),
   ],
   exceptionHandlers: [

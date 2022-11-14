@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const logger = require('./utils/logging');
 
 const app = express();
 
@@ -11,5 +12,5 @@ require('./startup/db')();
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`App running on port ${port}...`);
+  logger.info(`App running on port ${port}...`);
 });

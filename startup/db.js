@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-// const winston = require('winston');
 const logger = require('../utils/logging');
 
 const dbInstance = process.env.DATABASE.replace('<PASSWORD>', process.env.DBPASSWORD);
