@@ -13,6 +13,10 @@ const handleValidationErrorDB = (err) => {
   return new AppError(message, 400);
 };
 
+const handleJWTerror = () => new AppError('Invalid Token', 401);
+
+const handleJWTExpirederror = () => new AppError('Expired Token', 401);
+
 const sendErrorDev = (err, res) => {
   logger.error(err.stack);
 
@@ -49,8 +53,9 @@ module.exports = function (err, req, res, next) {
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
-    if (error._message && error._message.includes('validation failed'))
-      error = handleValidationErrorDB(error);
+    if (error._message && error._message.includes('validation failed')) error = handleValidationErrorDB(error);
+    if (error.name === 'JsonWebTokenError') error = handleJWTerror();
+    if (error.name === 'TokenExpiredError') error = handleJWTExpirederror();
     sendErrorProd(error, res);
   }
 };

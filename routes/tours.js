@@ -4,6 +4,8 @@ const validateObjectId = require('../middleware/validateObjectId');
 const aliasTopTours = require('../middleware/aliasTopTours');
 const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
+const auth = require('../middleware/auth');
+const restricttTo = require('../middleware/restricttTo');
 
 const router = express.Router();
 
@@ -80,7 +82,7 @@ router.get('/monthly-plan/:year', async (req, res) => {
   });
 });
 
-router.get(['/', '/top-5-cheap'], aliasTopTours, async (req, res) => {
+router.get(['/', '/top-5-cheap'], auth, aliasTopTours, async (req, res) => {
   //execute querys
   const features = new APIFeatures(Tour.find(), req.query).filter().sort().limitFields().paginate();
   const tours = await features.query;
@@ -122,7 +124,7 @@ router.patch('/:id', validateObjectId, async (req, res, next) => {
   });
 });
 
-router.delete('/:id', validateObjectId, async (req, res, next) => {
+router.delete('/:id', [validateObjectId, auth, restricttTo('admin', 'lead-guide')], async (req, res, next) => {
   const tour = await Tour.findByIdAndDelete(req.params.id);
   if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
 
