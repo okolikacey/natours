@@ -1,8 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const logger = require('./utils/logging');
+const limiter = require('./middleware/rateLimiter');
 
 const app = express();
+
+app.use('/api', limiter); //used to limit frequent calls on an api from an IP
 
 require('./utils/logging');
 require('./startup/routes')(app);
