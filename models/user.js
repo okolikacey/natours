@@ -79,5 +79,12 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000; //minus one second to account for time lag between saving document and token creation
+  next();
+});
+
 const User = mongoose.model('User', userSchema);
 module.exports = User;
