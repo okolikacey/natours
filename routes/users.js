@@ -95,6 +95,27 @@ router.patch('/resetPassword/:token', async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+router.patch('/updateMe', auth, async (req, res, next) => {
+  if (req.body.password || req.body.passwordConfirm) return next(new AppError('This route is not for password updates', 400));
+
+  const filteredBody = _.pick(req.body, ['name', 'email']);
+  const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, { new: true, runValidators: true });
+
+  res.json({
+    status: 'success',
+    data: {
+      user: updatedUser,
+    },
+  });
+});
+
+router.delete('/deleteMe', auth, async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user._id, { active: false });
+  res.status(204).json({
+    status: 'success',
+  });
+});
+
 // router.post('/', async (req, res) => {
 //   res.send('not yet implemented');
 // });
