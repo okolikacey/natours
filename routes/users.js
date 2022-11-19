@@ -6,26 +6,25 @@ const AppError = require('../utils/appError');
 const auth = require('../middleware/auth');
 const sendEmail = require('../utils/email');
 
-
 const router = express.Router();
 
-// const users = JSON.parse(
-//   fs.readFileSync(path.join(__dirname, '..', 'dev-data', 'data', 'users.json'))
-// );
-
-router.post('/signup', async (req, res) => {
-  const user = new User(_.pick(req.body, ['name', 'email', 'password', 'passwordChangedAt', 'role']));
-  await User.create(user);
-
+const createSendToken = (user, statusCode, res) => {
   const token = user.generateAuthToken();
 
-  res.status(201).json({
+  res.status(statusCode).json({
     status: 'success',
     token,
     data: {
       user: _.pick(user, ['_id', 'name', 'role', 'email']),
     },
   });
+};
+
+router.post('/signup', async (req, res) => {
+  const user = new User(_.pick(req.body, ['name', 'email', 'password', 'passwordChangedAt', 'role']));
+  await User.create(user);
+
+  createSendToken(user, 201, res);
 });
 
 router.post('/login', async (req, res, next) => {
@@ -35,11 +34,19 @@ router.post('/login', async (req, res, next) => {
   const user = await User.findOne({ email }).select('+password');
   if (!user || !(await user.correctPassword(password, user.password))) return next(new AppError('Incorrect email or password'), 401);
 
-  const token = user.generateAuthToken();
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
+});
+
+router.patch('/updatePassword', auth, async (req, res, next) => {
+  const user = await User.findById(req.user.id).select('+password');
+  const correctPass = await user.correctPassword(req.body.passwordCurrent, user.password);
+  if (!correctPass) return next(new AppError('Password provided does not match the current password', 401));
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+
+  await user.save();
+  createSendToken(user, 200, res);
 });
 
 router.post('/forgotPassword', async (req, res, next) => {
@@ -85,12 +92,7 @@ router.patch('/resetPassword/:token', async (req, res, next) => {
   user.passwordResetExpires = undefined;
 
   await user.save();
-
-  const token = user.generateAuthToken();
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 });
 
 // router.post('/', async (req, res) => {
