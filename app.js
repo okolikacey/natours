@@ -1,10 +1,11 @@
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet');
 const logger = require('./utils/logging');
 const limiter = require('./middleware/rateLimiter');
 
 const app = express();
-
+app.use(helmet()); //set security HTTP headers
 app.use('/api', limiter); //used to limit frequent calls on an api from an IP
 
 require('./utils/logging');
