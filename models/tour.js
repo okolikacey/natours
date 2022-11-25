@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const Joi = require('joi');
 const slugify = require('slugify');
+// const User = require('./user');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -101,6 +101,12 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true }, //defined for virtual properties
@@ -108,9 +114,11 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
-//virtual property and cannot be referenced in a query
-tourSchema.virtual('durationWeeks').get(function () {
-  return this.duration / 7;
+//Vitual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
 });
 
 //DOCUMENT MIDDLEWARE: runs before .save() and .create() but not on .insertMany()
@@ -134,6 +142,27 @@ tourSchema.pre(/^find/, function (next) {
 tourSchema.pre('aggregate', function (next) {
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
   next();
+});
+
+//populate the find query with guides user data
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
+  next();
+});
+
+//Embedding guides
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
+//   next();
+// });
+
+//virtual property and cannot be referenced in a query
+tourSchema.virtual('durationWeeks').get(function () {
+  return this.duration / 7;
 });
 
 const Tour = mongoose.model('Tour', tourSchema);

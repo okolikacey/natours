@@ -6,6 +6,7 @@ const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 const auth = require('../middleware/auth');
 const restricttTo = require('../middleware/restricttTo');
+const Review = require('../models/review');
 
 const router = express.Router();
 
@@ -94,7 +95,7 @@ router.get(['/', '/top-5-cheap'], auth, aliasTopTours, async (req, res) => {
 });
 
 router.get('/:id', validateObjectId, async (req, res, next) => {
-  const tour = await Tour.findById(req.params.id);
+  const tour = await Tour.findById(req.params.id).populate('reviews');
   if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
   res.json({
     status: 'success',
@@ -108,6 +109,19 @@ router.post('/', async (req, res) => {
   res.json({
     status: 'success',
     data: { tour: newTour },
+  });
+});
+
+router.post('/:tourId/reviews', [auth, restricttTo('user')], async (req, res, next) => {
+  //Allow nested routes
+  if (!req.body.tour) req.body.tour = req.params.tourId;
+  if (!req.body.user) req.body.user = req.user.id;
+
+  const review = await Review.create(req.body);
+
+  res.json({
+    status: 'success',
+    data: { review },
   });
 });
 
