@@ -5,6 +5,7 @@ const User = require('../models/user');
 const AppError = require('../utils/appError');
 const auth = require('../middleware/auth');
 const sendEmail = require('../utils/email');
+const factory = require('./handlerFactory');
 
 const router = express.Router();
 
@@ -115,12 +116,7 @@ router.patch('/updateMe', auth, async (req, res, next) => {
   });
 });
 
-router.delete('/deleteMe', auth, async (req, res, next) => {
-  await User.findByIdAndUpdate(req.user._id, { active: false });
-  res.status(204).json({
-    status: 'success',
-  });
-});
+factory.deleteOne(User, router);
 
 // router.post('/', async (req, res) => {
 //   res.send('not yet implemented');

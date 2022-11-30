@@ -5,10 +5,14 @@ const aliasTopTours = require('../middleware/aliasTopTours');
 const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 const auth = require('../middleware/auth');
-const restricttTo = require('../middleware/restricttTo');
-const Review = require('../models/review');
+const review = require('./reviews');
+const factory = require('./handlerFactory');
+
+// const Review = require('../models/review');
 
 const router = express.Router();
+
+router.use('/:tourId/reviews', review); //forward to reviews since route is for review activities
 
 router.get('/tour-stats', async (req, res) => {
   const stats = await Tour.aggregate([
@@ -112,19 +116,6 @@ router.post('/', async (req, res) => {
   });
 });
 
-router.post('/:tourId/reviews', [auth, restricttTo('user')], async (req, res, next) => {
-  //Allow nested routes
-  if (!req.body.tour) req.body.tour = req.params.tourId;
-  if (!req.body.user) req.body.user = req.user.id;
-
-  const review = await Review.create(req.body);
-
-  res.json({
-    status: 'success',
-    data: { review },
-  });
-});
-
 router.patch('/:id', validateObjectId, async (req, res, next) => {
   const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
@@ -138,14 +129,15 @@ router.patch('/:id', validateObjectId, async (req, res, next) => {
   });
 });
 
-router.delete('/:id', [validateObjectId, auth, restricttTo('admin', 'lead-guide')], async (req, res, next) => {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
-  if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
+factory.deleteOne(Tour, router);
+// router.delete('/:id', [validateObjectId, auth, restricttTo('admin', 'lead-guide')], async (req, res, next) => {
+//   const tour = await Tour.findByIdAndDelete(req.params.id);
+//   if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
 
-  res.status(204).send({
-    status: 'success',
-    data: null,
-  });
-});
+//   res.status(204).send({
+//     status: 'success',
+//     data: null,
+//   });
+// });
 
 module.exports = router;

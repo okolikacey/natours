@@ -6,11 +6,16 @@ const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
 const validateObjectId = require('../middleware/validateObjectId');
 const restricttTo = require('../middleware/restricttTo');
+const factory = require('./handlerFactory');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true }); //merge params for getting the tourId
 
 router.get('/', auth, async (req, res, next) => {
-  const features = new APIFeatures(Review.find(), req.query).filter().sort().limitFields().paginate();
+  const filter = {};
+  if (req.params.tourId) {
+    filter.tour = req.params.tourId;
+  }
+  const features = new APIFeatures(Review.find(filter), req.query).filter().sort().limitFields().paginate();
   const reviews = await features.query;
   res.json({
     status: 'success',
@@ -30,15 +35,18 @@ router.get('/:id', [auth, validateObjectId], async (req, res, next) => {
 });
 
 router.post('/', [auth, restricttTo('user')], async (req, res, next) => {
-  const review = req.body;
-  if (!review) return next(new AppError('Review cannot be empty', 400));
+  if (!req.body.tour) req.body.tour = req.params.tourId;
+  if (!req.body.user) req.body.user = req.user.id;
+  if (!req.body) return next(new AppError('Review cannot be empty', 400));
 
-  await Review.create(review);
+  const review = await Review.create(req.body);
 
   res.json({
     status: 'success',
     data: { review },
   });
 });
+
+factory.deleteOne(Review, router);
 
 module.exports = router;
