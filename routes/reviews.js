@@ -47,6 +47,14 @@ router.post('/', [auth, restricttTo('user')], async (req, res, next) => {
   });
 });
 
-factory.deleteOne(Review, router);
+router.delete('/:id', [validateObjectId, auth, restricttTo('admin', 'lead-guide')], async (req, res, next) => {
+  const doc = await Review.findByIdAndDelete(req.params.id);
+  if (!doc) return next(new AppError(`Review with id ${req.params.id} not found`, 404));
+
+  res.status(204).send({
+    status: 'success',
+    data: null,
+  });
+});
 
 module.exports = router;

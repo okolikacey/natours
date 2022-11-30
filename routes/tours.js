@@ -7,6 +7,7 @@ const AppError = require('../utils/appError');
 const auth = require('../middleware/auth');
 const review = require('./reviews');
 const factory = require('./handlerFactory');
+const restricttTo = require('../middleware/restricttTo');
 
 // const Review = require('../models/review');
 
@@ -129,15 +130,14 @@ router.patch('/:id', validateObjectId, async (req, res, next) => {
   });
 });
 
-factory.deleteOne(Tour, router);
-// router.delete('/:id', [validateObjectId, auth, restricttTo('admin', 'lead-guide')], async (req, res, next) => {
-//   const tour = await Tour.findByIdAndDelete(req.params.id);
-//   if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
+router.delete('/:id', [validateObjectId, auth, restricttTo('admin', 'lead-guide')], async (req, res, next) => {
+  const tour = await Tour.findByIdAndDelete(req.params.id);
+  if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
 
-//   res.status(204).send({
-//     status: 'success',
-//     data: null,
-//   });
-// });
+  res.status(204).send({
+    status: 'success',
+    data: null,
+  });
+});
 
 module.exports = router;
