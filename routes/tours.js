@@ -6,7 +6,6 @@ const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 const auth = require('../middleware/auth');
 const review = require('./reviews');
-const factory = require('./handlerFactory');
 const restricttTo = require('../middleware/restricttTo');
 
 // const Review = require('../models/review');

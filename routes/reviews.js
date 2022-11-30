@@ -6,7 +6,6 @@ const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
 const validateObjectId = require('../middleware/validateObjectId');
 const restricttTo = require('../middleware/restricttTo');
-const factory = require('./handlerFactory');
 
 const router = express.Router({ mergeParams: true }); //merge params for getting the tourId
 

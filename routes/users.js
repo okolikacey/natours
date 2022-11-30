@@ -5,7 +5,6 @@ const User = require('../models/user');
 const AppError = require('../utils/appError');
 const auth = require('../middleware/auth');
 const sendEmail = require('../utils/email');
-const factory = require('./handlerFactory');
 
 const router = express.Router();
 
@@ -116,15 +115,21 @@ router.patch('/updateMe', auth, async (req, res, next) => {
   });
 });
 
-factory.deleteOne(User, router);
+router.post('/', async (req, res) => {
+  res.send('not yet implemented');
+});
 
-// router.post('/', async (req, res) => {
-//   res.send('not yet implemented');
-// });
+router.patch('/:id', async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+  if (!user) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
 
-// router.patch('/:id', async (req, res) => {
-//   // if(!tour) return res.status(404).send(`Tour with id ${req.params.id} not found`)
-//   res.send('Updated');
-// });
+  res.send({
+    status: 'success',
+    data: { user },
+  });
+});
 
 module.exports = router;
