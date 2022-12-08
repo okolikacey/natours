@@ -33,26 +33,8 @@ router.post('/signup', async (req, res) => {
   createSendToken(user, 201, res);
 });
 
-router.post('/login', async (req, res, next) => {
-  const { email, password } = req.body;
-  if (!email || !password) return next(new AppError('Please provide email and password', 400));
-
-  const user = await User.findOne({ email }).select('+password');
-  if (!user || !(await user.correctPassword(password, user.password))) return next(new AppError('Incorrect email or password'), 401);
-
-  createSendToken(user, 200, res);
-});
-
-router.patch('/updatePassword', auth, async (req, res, next) => {
-  const user = await User.findById(req.user.id).select('+password');
-  const correctPass = await user.correctPassword(req.body.passwordCurrent, user.password);
-  if (!correctPass) return next(new AppError('Password provided does not match the current password', 401));
-
-  user.password = req.body.password;
-  user.passwordConfirm = req.body.passwordConfirm;
-
-  await user.save();
-  createSendToken(user, 200, res);
+router.post('/', async (req, res) => {
+  res.send('Kindly use signup');
 });
 
 router.post('/forgotPassword', async (req, res, next) => {
@@ -101,7 +83,40 @@ router.patch('/resetPassword/:token', async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
-router.patch('/updateMe', auth, async (req, res, next) => {
+router.post('/login', async (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email || !password) return next(new AppError('Please provide email and password', 400));
+
+  const user = await User.findOne({ email }).select('+password');
+  if (!user || !(await user.correctPassword(password, user.password))) return next(new AppError('Incorrect email or password'), 401);
+
+  createSendToken(user, 200, res);
+});
+
+router.get('/me', auth, async (req, res, next) => {
+  res.json({
+    status: 'success',
+    data: {
+      user: req.user,
+    },
+  });
+});
+
+router.use(auth); //protect all routes below
+
+router.patch('/updatePassword', auth, async (req, res, next) => {
+  const user = await User.findById(req.user.id).select('+password');
+  const correctPass = await user.correctPassword(req.body.passwordCurrent, user.password);
+  if (!correctPass) return next(new AppError('Password provided does not match the current password', 401));
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+
+  await user.save();
+  createSendToken(user, 200, res);
+});
+
+router.patch('/updateMe', async (req, res, next) => {
   if (req.body.password || req.body.passwordConfirm) return next(new AppError('This route is not for password updates', 400));
 
   const filteredBody = _.pick(req.body, ['name', 'email']);
@@ -115,17 +130,15 @@ router.patch('/updateMe', auth, async (req, res, next) => {
   });
 });
 
-router.post('/', async (req, res) => {
-  res.send('not yet implemented');
-});
-
-router.patch('/:id', async (req, res, next) => {
-  const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-  if (!user) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
-
+router.delete('/deleteMe', async (req, res, next) => {
+  const user = await User.updateOne(
+    { _id: req.user.id },
+    { active: false },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
   res.send({
     status: 'success',
     data: { user },

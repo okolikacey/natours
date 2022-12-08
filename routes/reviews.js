@@ -1,16 +1,17 @@
 const express = require('express');
 const Review = require('../models/review');
 const auth = require('../middleware/auth');
-// const restricttTo = require('../middleware/restricttTo');
+// const restrictTo = require('../middleware/restrictTo');
 const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
 const validateObjectId = require('../middleware/validateObjectId');
-const restricttTo = require('../middleware/restricttTo');
+const restrictTo = require('../middleware/restrictTo');
 
 const router = express.Router({ mergeParams: true }); //merge params for getting the tourId
 
 router.get('/', auth, async (req, res, next) => {
   const filter = {};
+  // To allow for nested GET reviews on tour (hack)
   if (req.params.tourId) {
     filter.tour = req.params.tourId;
   }
@@ -33,7 +34,7 @@ router.get('/:id', [auth, validateObjectId], async (req, res, next) => {
   });
 });
 
-router.post('/', [auth, restricttTo('user')], async (req, res, next) => {
+router.post('/', [auth, restrictTo('user')], async (req, res, next) => {
   if (!req.body.tour) req.body.tour = req.params.tourId;
   if (!req.body.user) req.body.user = req.user.id;
   if (!req.body) return next(new AppError('Review cannot be empty', 400));
@@ -46,7 +47,7 @@ router.post('/', [auth, restricttTo('user')], async (req, res, next) => {
   });
 });
 
-router.delete('/:id', [validateObjectId, auth, restricttTo('admin', 'lead-guide')], async (req, res, next) => {
+router.delete('/:id', [validateObjectId, auth, restrictTo('admin', 'lead-guide')], async (req, res, next) => {
   const doc = await Review.findByIdAndDelete(req.params.id);
   if (!doc) return next(new AppError(`Review with id ${req.params.id} not found`, 404));
 

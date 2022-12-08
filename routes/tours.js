@@ -6,7 +6,7 @@ const APIFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
 const auth = require('../middleware/auth');
 const review = require('./reviews');
-const restricttTo = require('../middleware/restricttTo');
+const restrictTo = require('../middleware/restrictTo');
 
 // const Review = require('../models/review');
 
@@ -41,7 +41,7 @@ router.get('/tour-stats', async (req, res) => {
   });
 });
 
-router.get('/monthly-plan/:year', async (req, res) => {
+router.get('/monthly-plan/:year', [auth, restrictTo('admin', 'lead-guide', 'guide')], async (req, res) => {
   const year = Number(req.params.year);
 
   const plan = await Tour.aggregate([
@@ -87,7 +87,7 @@ router.get('/monthly-plan/:year', async (req, res) => {
   });
 });
 
-router.get(['/', '/top-5-cheap'], auth, aliasTopTours, async (req, res) => {
+router.get(['/', '/top-5-cheap'], aliasTopTours, async (req, res) => {
   //execute querys
   const features = new APIFeatures(Tour.find(), req.query).filter().sort().limitFields().paginate();
   const tours = await features.query;
@@ -107,7 +107,7 @@ router.get('/:id', validateObjectId, async (req, res, next) => {
   });
 });
 
-router.post('/', async (req, res) => {
+router.post('/', [auth, restrictTo('admin', 'lead-guide')], async (req, res) => {
   const newTour = await Tour.create(req.body);
 
   res.json({
@@ -116,7 +116,7 @@ router.post('/', async (req, res) => {
   });
 });
 
-router.patch('/:id', validateObjectId, async (req, res, next) => {
+router.patch('/:id', [validateObjectId, auth, restrictTo('admin', 'lead-guide')], async (req, res, next) => {
   const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -129,7 +129,7 @@ router.patch('/:id', validateObjectId, async (req, res, next) => {
   });
 });
 
-router.delete('/:id', [validateObjectId, auth, restricttTo('admin', 'lead-guide')], async (req, res, next) => {
+router.delete('/:id', [validateObjectId, auth, restrictTo('admin', 'lead-guide')], async (req, res, next) => {
   const tour = await Tour.findByIdAndDelete(req.params.id);
   if (!tour) return next(new AppError(`Tour with id ${req.params.id} not found`, 404));
 

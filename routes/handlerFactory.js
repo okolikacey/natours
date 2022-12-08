@@ -1,11 +1,11 @@
 const validateObjectId = require('../middleware/validateObjectId');
 const auth = require('../middleware/auth');
-const restricttTo = require('../middleware/restricttTo');
+const restrictTo = require('../middleware/restrictTo');
 const AppError = require('../utils/appError');
 const setTourUserIds = require('../middleware/setTourUserIds');
 
 exports.deleteOne = (Model, router) =>
-  router.delete('/:id', [validateObjectId, auth, restricttTo('admin', 'lead-guide')], async (req, res, next) => {
+  router.delete('/:id', [validateObjectId, auth, restrictTo('admin', 'lead-guide')], async (req, res, next) => {
     const doc = await Model.findByIdAndDelete(req.params.id);
     if (!doc) return next(new AppError(`Document with id ${req.params.id} not found`, 404));
 
@@ -30,7 +30,7 @@ exports.updateOne = (Model, router) =>
   });
 
 exports.createOne = (Model, router) =>
-  router.post('/', [auth, restricttTo('user'), setTourUserIds], async (req, res) => {
+  router.post('/', [auth, restrictTo('user'), setTourUserIds], async (req, res) => {
     const doc = await Model.create(req.body);
 
     res.json({
